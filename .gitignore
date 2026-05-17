@@ -1,2 +1,3 @@
 node_modules/
 conceptOfTheDay/sidecar/without-sidecar/package-lock.json
+cryptography/aes-encryption/cipher.enc
