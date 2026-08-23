@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.swiftcart</groupId>
+    <artifactId>swiftcart-parent</artifactId>
+    <version>0.0.1</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>order-service</artifactId>
+  <name>order-service</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- ======================================================================
+         📝 order-service accumulates the most tier dependencies. Add as you go:
+         - Tier 3: spring-cloud-starter-openfeign  (replace raw RestTemplate)
+         - Tier 5: spring-kafka                     (emit/consume saga events)
+         - Tier 6: spring-cloud-starter-circuitbreaker-resilience4j
+         - Tier 7: micrometer-tracing-bridge-otel + opentelemetry-exporter-otlp
+         - Tier 9: spring-boot-starter-oauth2-resource-server
+         ====================================================================== -->
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>

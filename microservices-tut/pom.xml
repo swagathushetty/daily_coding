@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- ==========================================================================
+       📝 STRUCTURE NOTE (Newman Ch 7: Build) — this is a MULTI-MODULE MONOREPO.
+       One parent pom, one Maven wrapper, N service modules. Tradeoff recorded in
+       DECISIONS.md #1: a monorepo is easy to run/learn but can quietly encourage
+       coupling (shared code, lockstep releases) — the opposite of independent
+       deployability. We accept it for the course and stay disciplined: NO service
+       imports another service's module. (Each service is still independently
+       buildable and gets its own Dockerfile.)
+       ========================================================================== -->
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.3.4</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.swiftcart</groupId>
+  <artifactId>swiftcart-parent</artifactId>
+  <version>0.0.1</version>
+  <packaging>pom</packaging>
+  <name>SwiftCart Microservices (Newman course)</name>
+
+  <modules>
+    <module>services/catalog-service</module>
+    <module>services/order-service</module>
+    <module>services/payment-service</module>
+    <module>services/notification-service</module>
+    <module>services/gateway</module>
+  </modules>
+
+  <properties>
+    <java.version>21</java.version>
+    <spring-cloud.version>2023.0.3</spring-cloud.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Spring Cloud BOM — pins gateway, openfeign, contract, etc. Added by
+           later tiers as their tasks direct. -->
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>

@@ -1,0 +1,24 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: order-service
+  datasource:
+    # 🐛 TIER 4: same shared DB as catalog. That's what lets ProductPeek cheat.
+    url: jdbc:postgresql://localhost:5432/swiftcart
+    username: swift
+    password: swift
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

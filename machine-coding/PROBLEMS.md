@@ -66,6 +66,11 @@ These are janky-app-with-tasks courses, NOT machine-coding problems.
       connection pooling, Redis caching + stampede, nginx, streaming
       upload/download, BullMQ queue, SSE/WebSocket, memory-leak diagnosis,
       graceful shutdown, health/metrics. See its `TASKS.md`.
+- [x] **Microservices** (`../microservices-tut/`) — Java/Spring Boot + Spring
+      Cloud course following Newman's *Building Microservices*: evolve a
+      distributed monolith into real services (DDD boundaries, DB-per-service,
+      sagas, resiliency, tracing, contracts, gateway, security). See its
+      `TASKS.md` + `DECISIONS.md`.
 - [ ] **DB / query optimization** — indexes, EXPLAIN ANALYZE, N+1, keyset
       pagination, transactions/isolation. (planned)
 - [ ] **Application security** — OWASP top 10, auth/JWT/sessions, CSRF, XSS,

@@ -1,0 +1,27 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: catalog-service
+  datasource:
+    # 🐛 TIER 4: all services point at the SAME database (swiftcart). The
+    # database-per-service task changes this URL to a catalog-only DB.
+    url: jdbc:postgresql://localhost:5432/swiftcart
+    username: swift
+    password: swift
+  jpa:
+    hibernate:
+      ddl-auto: update      # fine for a course; prod uses migrations (Flyway)
+    open-in-view: false
+
+# 📝 TIER 7 (Observability): actuator is exposed for health/metrics. You'll add
+# management.tracing + otlp exporter config here to ship traces to Jaeger.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
