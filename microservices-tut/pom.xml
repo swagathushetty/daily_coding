@@ -28,6 +28,7 @@
   <name>SwiftCart Microservices (Newman course)</name>
 
   <modules>
+    <module>spring-basics</module>
     <module>services/catalog-service</module>
     <module>services/order-service</module>
     <module>services/payment-service</module>

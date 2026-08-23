@@ -6,6 +6,20 @@
 > because you lived without it. Log every tradeoff in `DECISIONS.md` as you go;
 > that log is what makes the project interview-defensible.
 
+## New to Spring? Start with the on-ramp
+
+If Spring Boot itself is unfamiliar (vs. just Java), do **`spring-basics/`
+first** — a zero-infra primer (in-memory, no Docker) that teaches
+`@SpringBootApplication`, `@RestController/@Service/@Repository`, dependency
+injection, REST mappings, and `application.yml`, in the same layered shape the
+real services use:
+
+```bash
+./mvnw -pl spring-basics spring-boot:run
+```
+
+Already comfortable with Spring? Skip it and go straight to the setup below.
+
 ## Setup
 
 ```bash

@@ -1,0 +1,19 @@
+# Externalized configuration. Spring reads this at startup. Any value here can
+# be overridden by an environment variable or command-line flag — the basis of
+# 12-factor config used by all the real services.
+server:
+  port: 8090          # try changing this and restarting
+
+spring:
+  application:
+    name: spring-basics
+
+# Actuator exposes operational endpoints. Visit /actuator/health.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# 📝 EXERCISE 4 uses this:
+# greeting: "hello from config"
