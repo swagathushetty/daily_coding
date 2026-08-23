@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchProducts } from '../api/client.js'
 import ProductCard from '../components/ProductCard.jsx'
-
+import { useQuery } from '@tanstack/react-query'
 const PAGE_SIZE = 12
 
 export default function ProductListPage() {
@@ -102,37 +102,47 @@ export default function ProductListPage() {
   //    `isPlaceholderData` to add e.g. style={{ opacity: 0.5 }} to the grid.
   // ==========================================================================
 
-  const [products, setProducts] = useState([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  // const [products, setProducts] = useState([])
+  // const [total, setTotal] = useState(0)
+  // const [loading, setLoading] = useState(true)
+  // const [error, setError] = useState(null)
   const [page, setPage] = useState(0)
 
-  useEffect(() => {
-    setLoading(true) // forgot to reset error here? classic hand-rolled bug 🐛
-    fetchProducts({ limit: PAGE_SIZE, skip: page * PAGE_SIZE })
-      .then((data) => {
-        // 🐛 No check whether this response is for the CURRENT page — a slow
-        // page-1 response can land after a fast page-2 response and win.
-        setProducts(data.products)
-        setTotal(data.total)
-        setLoading(false)
-      })
-      .catch((err) => {
-        setError(err.message)
-        setLoading(false)
-      })
-    // 🐛 No cleanup / AbortController. setState after unmount is possible.
-  }, [page])
 
-  if (loading) return <p className="status">Loading products…</p>
-  if (error) return <p className="status error">Error: {error}</p>
+  const {data,isError,isPending,error} = useQuery({
+    queryKey:['products',page],
+    queryFn: () => fetchProducts({ limit: PAGE_SIZE, skip: page * PAGE_SIZE }),
+    staleTime:60000
+  })
+
+  console.log('data is' ,data)
+
+//old code
+  // useEffect(() => {
+  //   setLoading(true) // forgot to reset error here? classic hand-rolled bug 🐛
+  //   fetchProducts({ limit: PAGE_SIZE, skip: page * PAGE_SIZE })
+  //     .then((data) => {
+  //       // 🐛 No check whether this response is for the CURRENT page — a slow
+  //       // page-1 response can land after a fast page-2 response and win.
+  //       setProducts(data.products)
+  //       setTotal(data.total)
+  //       setLoading(false)
+  //     })
+  //     .catch((err) => {
+  //       setError(err.message)
+  //       setLoading(false)
+  //     })
+  //   // 🐛 No cleanup / AbortController. setState after unmount is possible.
+  // }, [page])
+
+  if (isPending) return <p className="status">Loading products…</p>
+  if (isError) return <p className="status error">Error: {error}</p>
 
   return (
     <section>
       <h2>Products (page {page + 1})</h2>
       <div className="grid">
-        {products.map((p) => (
+        {data.products.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
       </div>
@@ -141,7 +151,7 @@ export default function ProductListPage() {
           ← Prev
         </button>
         <button
-          disabled={(page + 1) * PAGE_SIZE >= total}
+          disabled={(page + 1) * PAGE_SIZE >= data.total}
           onClick={() => setPage((p) => p + 1)}
         >
           Next →
