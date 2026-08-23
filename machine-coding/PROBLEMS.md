@@ -55,3 +55,18 @@ the blank rebuild.
 
 autocomplete → nested comments → multi-step form → concurrency scheduler →
 then pick by weakness.
+
+---
+
+# Backend / Infra courses (separate track, `../node-perf-tut` etc.)
+
+These are janky-app-with-tasks courses, NOT machine-coding problems.
+
+- [x] **Node at scale** (`../node-perf-tut/`) — event loop, worker_threads,
+      connection pooling, Redis caching + stampede, nginx, streaming
+      upload/download, BullMQ queue, SSE/WebSocket, memory-leak diagnosis,
+      graceful shutdown, health/metrics. See its `TASKS.md`.
+- [ ] **DB / query optimization** — indexes, EXPLAIN ANALYZE, N+1, keyset
+      pagination, transactions/isolation. (planned)
+- [ ] **Application security** — OWASP top 10, auth/JWT/sessions, CSRF, XSS,
+      SQLi. (planned)
