@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { fetchProducts } from '../api/client.js'
 import ProductCard from '../components/ProductCard.jsx'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery,keepPreviousData } from '@tanstack/react-query'
 const PAGE_SIZE = 12
 
 export default function ProductListPage() {
@@ -112,6 +112,7 @@ export default function ProductListPage() {
   const {data,isError,isPending,error} = useQuery({
     queryKey:['products',page],
     queryFn: () => fetchProducts({ limit: PAGE_SIZE, skip: page * PAGE_SIZE }),
+    placeholderData:keepPreviousData,
     staleTime:60000
   })
 

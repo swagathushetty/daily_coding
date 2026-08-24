@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchProduct, fetchProductsByCategory } from '../api/client.js'
-
+import { useQuery } from '@tanstack/react-query'
 export default function ProductDetailPage() {
   const { id } = useParams()
 
@@ -64,10 +64,23 @@ export default function ProductDetailPage() {
   //    useQueryClient()). Guard the description with a fallback while partial.
   // ==========================================================================
 
-  const [product, setProduct] = useState(null)
+  // const [product, setProduct] = useState(null)
   const [related, setRelated] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const productQuery = useQuery({
+    queryKey:['product', id],
+    queryFn: () => fetchProduct(id),
+  })
+
+  const category = productQuery.data?.category
+
+  const categoryQ = useQuery({
+    queryKey: ['products','category',category],
+    queryFn: () => fetchProductsByCategory(category),
+
+  })
 
   // fetch #1: the product itself
   useEffect(() => {
