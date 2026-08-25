@@ -65,9 +65,9 @@ export default function ProductDetailPage() {
   // ==========================================================================
 
   // const [product, setProduct] = useState(null)
-  const [related, setRelated] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  // const [related, setRelated] = useState([])
+  // const [loading, setLoading] = useState(true)
+  // const [error, setError] = useState(null)
 
   const productQuery = useQuery({
     queryKey:['product', id],
@@ -76,45 +76,50 @@ export default function ProductDetailPage() {
 
   const category = productQuery.data?.category
 
-  const categoryQ = useQuery({
+  const relatedQuery = useQuery({
     queryKey: ['products','category',category],
     queryFn: () => fetchProductsByCategory(category),
-
+    enabled: !!category,
   })
 
   // fetch #1: the product itself
-  useEffect(() => {
-    setLoading(true)
-    setProduct(null) // manual reset so old product doesn't flash 🙄
-    setRelated([])
-    fetchProduct(id)
-      .then((data) => {
-        setProduct(data)
-        setLoading(false)
-      })
-      .catch((e) => {
-        setError(e.message)
-        setLoading(false)
-      })
-  }, [id])
+  // useEffect(() => {
+  //   setLoading(true)
+  //   setProduct(null) // manual reset so old product doesn't flash 🙄
+  //   setRelated([])
+  //   fetchProduct(id)
+  //     .then((data) => {
+  //       setProduct(data)
+  //       setLoading(false)
+  //     })
+  //     .catch((e) => {
+  //       setError(e.message)
+  //       setLoading(false)
+  //     })
+  // }, [id])
 
   // fetch #2: hand-rolled "dependent query" — waits on product.category
-  useEffect(() => {
-    if (!product?.category) return
-    fetchProductsByCategory(product.category)
-      .then((data) =>
-        setRelated(data.products.filter((p) => String(p.id) !== id)),
-      )
-      .catch(() => {
-        /* 🐛 swallowed error — user never knows related failed */
-      })
-  }, [product?.category, id])
+  // useEffect(() => {
+  //   if (!product?.category) return
+  //   fetchProductsByCategory(product.category)
+  //     .then((data) =>
+  //       setRelated(data.products.filter((p) => String(p.id) !== id)),
+  //     )
+  //     .catch(() => {
+  //       /* 🐛 swallowed error — user never knows related failed */
+  //     })
+  // }, [product?.category, id])
 
-  if (loading) return <p className="status">Loading product…</p>
-  if (error) return <p className="status error">Error: {error}</p>
-  if (!product) return null
+  if (productQuery.isPending) return <p className="status">Loading product…</p>
+  if (productQuery.isError) return <p className="status error">Error: {productQuery.error}</p>
+  if (!productQuery.data) return null
 
-  return (
+  const product = productQuery.data
+  const related = relatedQuery.data?.products || []
+  console.log("Product",product)
+  console.log("related",related)
+
+  return ( 
     <section>
       <Link to="/">← back</Link>
       <div className="detail">
