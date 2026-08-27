@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { fetchProduct, fetchProductsByCategory } from '../api/client.js'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+
 export default function ProductDetailPage() {
   const { id } = useParams()
+  const queryClient = useQueryClient()
 
   // ==========================================================================
   // 📝 TASK 5 — Dependent (chained) queries
@@ -72,6 +74,15 @@ export default function ProductDetailPage() {
   const productQuery = useQuery({
     queryKey:['product', id],
     queryFn: () => fetchProduct(id),
+    placeholderData: () => { // we displaay possibly stale data at start from the listing page till we get fresh from api call
+      // look through EVERY cached ['products', ...] page, not just page 0
+      const cached = queryClient.getQueriesData({ queryKey: ['products'] })
+      for (const [, data] of cached) {
+        const hit = data?.products?.find((p) => String(p.id) === id)
+        if (hit) return hit
+      }
+      return undefined
+    },
   })
 
   const category = productQuery.data?.category
@@ -82,40 +93,14 @@ export default function ProductDetailPage() {
     enabled: !!category,
   })
 
-  // fetch #1: the product itself
-  // useEffect(() => {
-  //   setLoading(true)
-  //   setProduct(null) // manual reset so old product doesn't flash 🙄
-  //   setRelated([])
-  //   fetchProduct(id)
-  //     .then((data) => {
-  //       setProduct(data)
-  //       setLoading(false)
-  //     })
-  //     .catch((e) => {
-  //       setError(e.message)
-  //       setLoading(false)
-  //     })
-  // }, [id])
-
-  // fetch #2: hand-rolled "dependent query" — waits on product.category
-  // useEffect(() => {
-  //   if (!product?.category) return
-  //   fetchProductsByCategory(product.category)
-  //     .then((data) =>
-  //       setRelated(data.products.filter((p) => String(p.id) !== id)),
-  //     )
-  //     .catch(() => {
-  //       /* 🐛 swallowed error — user never knows related failed */
-  //     })
-  // }, [product?.category, id])
-
   if (productQuery.isPending) return <p className="status">Loading product…</p>
-  if (productQuery.isError) return <p className="status error">Error: {productQuery.error}</p>
+  if (productQuery.isError) return <p className="status error">Error: {productQuery.error.message}</p>
   if (!productQuery.data) return null
 
   const product = productQuery.data
-  const related = relatedQuery.data?.products || []
+  const related = (relatedQuery.data?.products || []).filter(
+    (p) => String(p.id) !== id,
+  )
   console.log("Product",product)
   console.log("related",related)
 
@@ -127,7 +112,7 @@ export default function ProductDetailPage() {
         <div>
           <h2>{product.title}</h2>
           <p className="price">${product.price}</p>
-          <p>{product.description}</p>
+          <p>{product.description ?? 'Loading description…'}</p>
           <p>
             ⭐ {product.rating} · {product.stock} in stock ·{' '}
             <em>{product.category}</em>
