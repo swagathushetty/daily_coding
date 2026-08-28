@@ -74,6 +74,7 @@ export default function ProductDetailPage() {
   const productQuery = useQuery({
     queryKey:['product', id],
     queryFn: () => fetchProduct(id),
+    staleTime: 30_000, // match the hover prefetch, else mounting refetches immediately
     placeholderData: () => { // we displaay possibly stale data at start from the listing page till we get fresh from api call
       // look through EVERY cached ['products', ...] page, not just page 0
       const cached = queryClient.getQueriesData({ queryKey: ['products'] })

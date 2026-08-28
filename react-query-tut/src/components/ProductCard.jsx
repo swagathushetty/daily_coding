@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-
+import { useQueryClient } from '@tanstack/react-query'
+import { fetchProduct } from '../api/client'
 // ============================================================================
 // 📝 TASK 7 — Prefetch on hover
 //             (concept: queryClient.prefetchQuery)
@@ -31,8 +32,18 @@ import { Link } from 'react-router-dom'
 // ============================================================================
 
 export default function ProductCard({ product }) {
+
+  const queryClient = useQueryClient()
   return (
-    <Link to={`/product/${product.id}`} className="card">
+    <Link 
+    onMouseEnter={()=>{
+      queryClient.prefetchQuery({
+        queryKey: ['product', String(product.id)],
+        queryFn: () => fetchProduct(product.id),
+        staleTime: 30_000, 
+      })
+    }}
+    to={`/product/${product.id}`} className="card">
       <img src={product.thumbnail} alt={product.title} loading="lazy" />
       <h3>{product.title}</h3>
       <p>
