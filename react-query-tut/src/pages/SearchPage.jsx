@@ -1,9 +1,26 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { searchProducts } from '../api/client.js'
+import { useQuery } from '@tanstack/react-query'
+
+function useDebouncedValue(value, delay = 400) {
+  const [debouncedValue, setDebouncedValue] = useState(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
+
 
 export default function SearchPage() {
-  const [query, setQuery] = useState('')
 
   // ==========================================================================
   // 📝 TASK 8 — Search: conditional fetching, debouncing, race conditions
@@ -43,34 +60,21 @@ export default function SearchPage() {
   //       in-flight request, including background refreshes of cached data.
   // ==========================================================================
 
-  const [results, setResults] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
 
-  useEffect(() => {
-    if (!query.trim()) {
-      setResults([])
-      return
-    }
-    let ignore = false // manual race-condition patch — the thing RQ makes obsolete
-    setLoading(true)
-    searchProducts(query)
-      .then((data) => {
-        if (!ignore) {
-          setResults(data.products)
-          setLoading(false)
-        }
-      })
-      .catch((e) => {
-        if (!ignore) {
-          setError(e.message)
-          setLoading(false)
-        }
-      })
-    return () => {
-      ignore = true
-    }
-  }, [query])
+  const [query, setQuery] = useState('')
+  const debouncedQuery = useDebouncedValue(query, 400)
+
+  const searchQuery = useQuery({
+    queryKey : ['search',debouncedQuery],
+    queryFn: () => searchProducts(debouncedQuery),
+    enabled: debouncedQuery.trim().length >= 2,
+    staleTime: 60_000,
+
+  })
+
+
+  const products = searchQuery.data?.products || []
+
 
   return (
     <section>
@@ -80,10 +84,10 @@ export default function SearchPage() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search products… (try 'phone')"
       />
-      {loading && <p className="status">Searching…</p>}
-      {error && <p className="status error">Error: {error}</p>}
+      {searchQuery.isPending && <p className="status">Searching…</p>}
+      {searchQuery.isError && <p className="status error">Error: {searchQuery.error.message}</p>}
       <ul>
-        {results.map((p) => (
+        {products.map((p) => (
           <li key={p.id}>
             <Link to={`/product/${p.id}`}>
               {p.title} — ${p.price}

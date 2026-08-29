@@ -37,7 +37,7 @@ export default function ProductCard({ product }) {
   return (
     <Link 
     onMouseEnter={()=>{
-      queryClient.prefetchQuery({
+      queryClient.query({
         queryKey: ['product', String(product.id)],
         queryFn: () => fetchProduct(product.id),
         staleTime: 30_000, 
