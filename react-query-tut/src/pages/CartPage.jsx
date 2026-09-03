@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchCart, updateCart } from '../api/client.js'
-
+import { useMutation,useQuery,useQueryClient } from '@tanstack/react-query'
 const CART_ID = 1
 
 export default function CartPage() {
@@ -51,18 +51,18 @@ export default function CartPage() {
   // 💡 WHY REACT QUERY:
   //    The full optimistic recipe on the mutation:
   //
-  //    onMutate: async (newProducts) => {
-  //      await qc.cancelQueries({ queryKey: ['cart', CART_ID] })   // don't let an
-  //      const previous = qc.getQueryData(['cart', CART_ID])       // in-flight
-  //      qc.setQueryData(['cart', CART_ID], (old) => ({            // refetch
-  //        ...old, products: newProducts,                          // clobber us
-  //      }))
-  //      return { previous }                        // → context for rollback
-  //    },
-  //    onError: (_err, _vars, ctx) =>
-  //      qc.setQueryData(['cart', CART_ID], ctx.previous),         // rollback!
-  //    onSettled: () =>
-  //      qc.invalidateQueries({ queryKey: ['cart', CART_ID] }),    // re-sync
+    //  onMutate: async (newProducts) => {
+    //    await qc.cancelQueries({ queryKey: ['cart', CART_ID] })   // don't let an
+    //    const previous = qc.getQueryData(['cart', CART_ID])       // in-flight
+    //    qc.setQueryData(['cart', CART_ID], (old) => ({            // refetch
+    //      ...old, products: newProducts,                          // clobber us
+    //    }))
+    //    return { previous }                        // → context for rollback
+    //  },
+    //  onError: (_err, _vars, ctx) =>
+    //    qc.setQueryData(['cart', CART_ID], ctx.previous),         // rollback!
+    //  onSettled: () =>
+    //    qc.invalidateQueries({ queryKey: ['cart', CART_ID] }),    // re-sync
   //
   //    UI updates instantly; if the server rejects, state snaps back and you
   //    can toast an error. Test the rollback by turning on network "Offline"
@@ -71,27 +71,70 @@ export default function CartPage() {
   // ✅ YOUR TASK: add onMutate/onError/onSettled to Task 9's mutation.
   // ==========================================================================
 
-  const [cart, setCart] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(null)
 
-  function loadCart() {
-    setLoading(true)
-    fetchCart(CART_ID)
-      .then((data) => {
-        setCart(data)
-        setLoading(false)
-      })
-      .catch((e) => {
-        setError(e.message)
-        setLoading(false)
-      })
-  }
 
-  useEffect(loadCart, [])
+  const queryClient = useQueryClient()
+
+  const cartQuery = useQuery({
+    queryKey: ['cart',CART_ID],
+    queryFn: () => fetchCart(CART_ID),
+  })
+
+  const qtyMutation = useMutation({
+    mutationFn: () => ({ products }) => updateCart(CART_ID, products),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart', CART_ID] }), //force to fetch latest cart from server,
+    
+    //onMutate runs before the network request even fires.
+    //It cancels pending cart requests, grabs a quick snapshot of the current cart, 
+    // instantly injects the user's new quantities into the cache (making the UI feel instantaneous), and saves the old data as a safety net.
+    onMutate: async (newProducts) => {
+
+      // It forcefully stops any active, outgoing network requests that are currently trying to fetch this specific cart data.
+      //f the user is on a slow connection and a previous background fetch finishes after you change the quantity,
+      //  that old server data would overwrite your new, optimistic data.
+       await queryClient.cancelQueries({ queryKey: ['cart', CART_ID] })  
+
+       const previous = queryClient.getQueryData(['cart', CART_ID])       
+
+       //This is your safety net. If the server network request fails (e.g., internet drops, item goes out of stock), 
+       // you will need this exact data to restore the user's screen back to how it was.
+       queryClient.setQueryData(['cart', CART_ID], (old) => ({           
+         ...old, products: newProducts,                          
+       }))
+
+       //Anything you return from onMutate becomes available as the context (ctx) parameter in other lifecycle hooks like onError and onSettled
+       return { previous }                        
+     },
+      // If the API fails, grab the 'previous' snapshot from context and restore it
+     onError: (_err, _vars, ctx) =>
+       queryClient.setQueryData(['cart', CART_ID], ctx.previous),         // rollback!
+     onSettled: () =>
+       queryClient.invalidateQueries({ queryKey: ['cart', CART_ID] }),    // re-sync
+
+  })
+  // const [cart, setCart] = useState(null)
+  // const [loading, setLoading] = useState(true)
+  // const [saving, setSaving] = useState(false)
+  // const [error, setError] = useState(null)
+
+  // function loadCart() {
+  //   setLoading(true)
+  //   fetchCart(CART_ID)
+  //     .then((data) => {
+  //       setCart(data)
+  //       setLoading(false)
+  //     })
+  //     .catch((e) => {
+  //       setError(e.message)
+  //       setLoading(false)
+  //     })
+  // }
+
+  // useEffect(loadCart, [])
 
   function changeQty(productId, delta) {
+
+    
     const products = cart.products
       .map((p) =>
         p.id === productId ? { ...p, quantity: p.quantity + delta } : p,
@@ -99,34 +142,37 @@ export default function CartPage() {
       .filter((p) => p.quantity > 0)
       .map((p) => ({ id: p.id, quantity: p.quantity }))
 
-    setSaving(true) // blocks the WHOLE page — no per-row pending state
-    updateCart(CART_ID, products)
-      .then(() => {
-        setSaving(false)
-        loadCart() // manual refetch; nobody else in the app learns of this
-      })
-      .catch((e) => {
-        setSaving(false)
-        setError(e.message) // 🐛 no rollback concept — UI and server disagree
-      })
+    qtyMutation.mutate(products)
+
+    // setSaving(true) // blocks the WHOLE page — no per-row pending state
+    // updateCart(CART_ID, products)
+    //   .then(() => {
+    //     setSaving(false)
+    //     loadCart() // manual refetch; nobody else in the app learns of this
+    //   })
+    //   .catch((e) => {
+    //     setSaving(false)
+    //     setError(e.message) // 🐛 no rollback concept — UI and server disagree
+    //   })
   }
 
-  if (loading) return <p className="status">Loading cart…</p>
-  if (error) return <p className="status error">Error: {error}</p>
+  if (cartQuery.isPending) return <p className="status">Loading cart…</p>
+  if (cartQuery.isError) return <p className="status error">Error: {cartQuery.error.message}</p>
 
+  const cart = cartQuery?.data
   return (
     <section>
-      <h2>Your Cart {saving && <small>(saving…)</small>}</h2>
+      <h2>Your Cart {qtyMutation.isPending && <small>(saving…)</small>}</h2>
       <ul className="cart">
         {cart.products.map((p) => (
           <li key={p.id}>
             <span>{p.title}</span>
             <span>
-              <button disabled={saving} onClick={() => changeQty(p.id, -1)}>
+              <button disabled={qtyMutation.isPending} onClick={() => changeQty(p.id, -1)}>
                 −
               </button>
               {p.quantity}
-              <button disabled={saving} onClick={() => changeQty(p.id, +1)}>
+              <button disabled={qtyMutation.isPending} onClick={() => changeQty(p.id, +1)}>
                 ＋
               </button>
             </span>

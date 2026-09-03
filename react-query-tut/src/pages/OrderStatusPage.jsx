@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchOrderStatus } from '../api/client.js'
-
+import { useQuery } from '@tanstack/react-query'
 // (We fake an "order status feed" with dummyjson's /todos endpoint —
 //  pretend `completed: true` means "Delivered".)
 
@@ -66,23 +66,37 @@ export default function OrderStatusPage() {
   //    3. Render `failureCount` while retrying ("attempt 2 of 3…").
   // ==========================================================================
 
-  const [order, setOrder] = useState(null)
-  const [error, setError] = useState(null)
+  // const [order, setOrder] = useState(null)
+  // const [error, setError] = useState(null)
 
-  useEffect(() => {
-    setOrder(null)
-    setError(null)
+  // useEffect(() => {
+  //   setOrder(null)
+  //   setError(null)
 
-    function poll() {
-      fetchOrderStatus(orderId)
-        .then(setOrder)
-        .catch((e) => setError(e.message)) // 🐛 one blip = permanent error
-    }
+  //   function poll() {
+  //     fetchOrderStatus(orderId)
+  //       .then(setOrder)
+  //       .catch((e) => setError(e.message)) // 🐛 one blip = permanent error
+  //   }
 
-    poll()
-    const t = setInterval(poll, 5000) // 🐛 polls forever, even hidden tabs,
-    return () => clearInterval(t) //     even after "delivery"
-  }, [orderId])
+  //   poll()
+  //   const t = setInterval(poll, 5000) // 🐛 polls forever, even hidden tabs,
+  //   return () => clearInterval(t) //     even after "delivery"
+  // }, [orderId])
+
+
+  const orderStatusQuery = useQuery({
+    queryKey: ['order',orderId],
+    queryFn: () => fetchOrderStatus(orderId),
+    refetchInterval: (query) =>{
+      console.log(query)
+      return query.state.data?.completed ? false :5000
+    } 
+
+  })
+
+  const error = orderStatusQuery?.isError
+  
 
   return (
     <section>
@@ -96,14 +110,14 @@ export default function OrderStatusPage() {
           onChange={(e) => setOrderId(Number(e.target.value))}
         />
       </label>
-      {error && <p className="status error">Error: {error}</p>}
-      {!order && !error && <p className="status">Loading order…</p>}
-      {order && (
+      {error && <p className="status error">Error: {orderStatusQuery.error.message}</p>}
+      {orderStatusQuery.isFetching && <p className="status">Loading order…</p>}
+      {orderStatusQuery.data && (
         <div className="order">
-          <p>“{order.todo}”</p>
+          <p>“{orderStatusQuery.data.todo}”</p>
           <p>
             Status:{' '}
-            {order.completed ? '✅ Delivered' : '🚚 Out for delivery (polling every 5s)'}
+            {orderStatusQuery.data.completed ? '✅ Delivered' : '🚚 Out for delivery (polling every 5s)'}
           </p>
         </div>
       )}
