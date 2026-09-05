@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchReviews } from '../api/client.js'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 const PAGE_SIZE = 10
 
@@ -45,29 +46,54 @@ export default function ReviewsPage() {
   //    fetchNextPage() when it scrolls into view = true infinite scroll.
   // ==========================================================================
 
-  const [reviews, setReviews] = useState([])
-  const [skip, setSkip] = useState(0)
-  const [hasMore, setHasMore] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [error, setError] = useState(null)
+  // const [reviews, setReviews] = useState([])
+  // const [skip, setSkip] = useState(0)
+  // const [hasMore, setHasMore] = useState(true)
+  // const [loadingMore, setLoadingMore] = useState(false)
+  // const [error, setError] = useState(null)
 
-  useEffect(() => {
-    setLoadingMore(true)
-    fetchReviews({ limit: PAGE_SIZE, skip })
-      .then((data) => {
-        // 🐛 runs twice under StrictMode → duplicate keys warning + dupe rows
-        setReviews((prev) => [...prev, ...data.comments])
-        setHasMore(skip + PAGE_SIZE < data.total)
-        setLoadingMore(false)
-      })
-      .catch((e) => {
-        setError(e.message)
-        setLoadingMore(false)
-      })
-  }, [skip])
+  // useEffect(() => {
+  //   setLoadingMore(true)
+  //   fetchReviews({ limit: PAGE_SIZE, skip })
+  //     .then((data) => {
+  //       // 🐛 runs twice under StrictMode → duplicate keys warning + dupe rows
+  //       setReviews((prev) => [...prev, ...data.comments])
+  //       setHasMore(skip + PAGE_SIZE < data.total)
+  //       setLoadingMore(false)
+  //     })
+  //     .catch((e) => {
+  //       setError(e.message)
+  //       setLoadingMore(false)
+  //     })
+  // }, [skip])
 
-  if (error) return <p className="status error">Error: {error}</p>
+  const pagesQuery = useInfiniteQuery({
+    queryKey:['reviews'],
+    queryFn:({ pageParam }) => fetchReviews({ limit: PAGE_SIZE, skip: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>{
+      const next = lastPage.skip + lastPage.limit
+      return next < lastPage.total ? next : undefined  // undefined = end
+    } 
 
+  })
+
+
+  if (pagesQuery.isError) return <p className="status error">Error: {pagesQuery.error.message}</p>
+   const isPending = pagesQuery.isPending
+
+  if(isPending){
+    return (
+      <div>
+        Loading ...............................
+      </div>
+    )
+  }
+  //. With useInfiniteQuery, data is { pages: [...], pageParams: [...] } — not an array. You need to flatten:
+  const reviews = pagesQuery.data.pages.flatMap((p) => p.comments)  
+  const hasMore =pagesQuery.hasNextPage
+  const isFetchingNextPage = pagesQuery.isFetchingNextPage
+  
   return (
     <section>
       <h2>Product Reviews</h2>
@@ -79,10 +105,10 @@ export default function ReviewsPage() {
         ))}
       </ul>
       <button
-        disabled={!hasMore || loadingMore}
-        onClick={() => setSkip((s) => s + PAGE_SIZE)}
+        disabled={!hasMore || isFetchingNextPage}
+        onClick={() => pagesQuery.fetchNextPage()}
       >
-        {loadingMore ? 'Loading…' : hasMore ? 'Load more' : 'No more reviews'}
+        {isFetchingNextPage ? 'Loading…' : hasMore ? 'Load more' : 'No more reviews'}
       </button>
     </section>
   )
