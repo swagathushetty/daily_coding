@@ -1,0 +1,88 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; }
+
+.app { min-height: 100vh; padding: 1rem; max-width: 1100px; margin: 0 auto; }
+.app.dark { background: #0f1420; color: #e6e9f0; }
+.app.light { background: #f6f7f9; color: #1c2333; }
+
+header { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+header h1 { margin: 0.5rem 0; }
+.clock { font-variant-numeric: tabular-nums; opacity: 0.7; }
+
+button {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid #4a556866;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.search {
+  width: 100%;
+  max-width: 420px;
+  padding: 0.6rem;
+  margin: 0.75rem 0;
+  border: 1px solid #4a556866;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 1rem;
+}
+
+.layout { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+@media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+
+.stats { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.stats > div {
+  background: #ffffff10;
+  border: 1px solid #4a556833;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  display: flex;
+  flex-direction: column;
+}
+.stats span { font-size: 0.75rem; opacity: 0.65; }
+
+.coins { list-style: none; padding: 0; margin: 0; }
+.coin-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid #4a556822;
+  font-size: 0.9rem;
+  height: 44px;
+}
+.coin-row .sym { width: 90px; opacity: 0.7; font-family: monospace; }
+.coin-row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.coin-row .price { font-variant-numeric: tabular-nums; }
+.up { color: #2fbf71; }
+.down { color: #e5484d; }
+.star { border: none; font-size: 1rem; padding: 0 0.25rem; }
+
+.watchlist ul { list-style: none; padding: 0; }
+.watch-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #4a556822;
+  font-size: 0.85rem;
+}
+.watch-row input {
+  width: 90px;
+  padding: 0.25rem;
+  border: 1px solid #4a556844;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+}
+
+.analytics {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid #4a556833;
+  border-radius: 8px;
+}
+.hint { opacity: 0.6; font-size: 0.85rem; }

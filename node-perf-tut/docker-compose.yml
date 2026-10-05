@@ -1,0 +1,39 @@
+# Infra for the course: Postgres, Redis, nginx.
+# The Node app runs on your HOST (so you can restart/instrument it freely);
+# nginx inside docker proxies to it via host.docker.internal.
+#
+#   docker compose up -d
+#   npm run seed
+#   npm run dev            (and later: npm run worker)
+#
+# App:            http://localhost:3000   (direct to Node)
+# Through nginx:  http://localhost:8080   (Tasks 14+ use this)
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: swift
+      POSTGRES_PASSWORD: swift
+      POSTGRES_DB: swiftcart
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - '8080:80'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./public:/var/www/public:ro
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+volumes:
+  pgdata:
